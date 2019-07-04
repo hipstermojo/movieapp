@@ -1,0 +1,17 @@
+[package]
+name = "movieapp"
+version = "0.1.0"
+authors = ["Kenneth Gitere <gitere81@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+actix-web="1.0.3"
+bson="0.13.0"
+chrono={ version = "0.4.7", features = ["serde"]}
+futures="0.1.28"
+mongodb="0.3.12"
+r2d2="0.8.5"
+r2d2-mongodb="0.2.2"
+serde="1.0.94"
+serde_derive="1.0.94"
+tera="0.11.20"
