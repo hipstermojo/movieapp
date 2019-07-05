@@ -1,0 +1,42 @@
+.hero {
+    width: 100%;
+    height: 70vh;
+    background: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
+}
+
+.hero-overlay {
+    width: 45vw;
+    height: 300px;
+    position: absolute;
+    top: 20%;
+    left: 10%;
+}
+
+.hero-card {
+    height: inherit;
+    width: inherit;
+    display: flex;
+}
+
+.hero-card>img {
+    width: 200px;
+    height: inherit;
+}
+
+.hero-card-details {
+    padding: 5px;
+    width: calc(45vw - 200px);
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.hero-card-details>p {
+    color: white;
+}
+
+.hero-card-details>.title {
+    font-size: 24px;
+    font-weight: bold;
+}

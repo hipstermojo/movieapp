@@ -1,0 +1,18 @@
+{% extends "base.tera" %}
+{% block styles %}
+    {{super()}}
+    <link rel="stylesheet" href="/static/css/index.css">
+{% endblock %}
+{% block main %}
+<div class="hero" style="background-image:url('https://image.tmdb.org/t/p/w500{{results[0].backdrop_path}}')" alt="poster backdrop">
+</div>
+<div class="hero-overlay">
+    <div class="hero-card">
+        <img src="https://image.tmdb.org/t/p/w500{{results[0].poster_path}}" alt="{{results[0].title}} poster image">
+        <div class="hero-card-details">
+            <p class="title">{{results[0].title}}</p>
+            <p class="overview">{{results[0].overview}}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,12 +1,22 @@
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+extern crate serde;
+
+#[macro_use]
+extern crate tera;
+
 use std::env;
 use std::io;
 
-use actix_web::{web, App, HttpServer};
+use actix_files as fs;
+use actix_web::client::Client;
+use actix_web::{middleware,web, App, HttpServer};
 use r2d2::Pool;
 use r2d2_mongodb::{ConnectionOptions, MongodbConnectionManager};
+use tera::Tera;
+
 mod handler;
 mod model;
 
@@ -30,7 +40,7 @@ fn main() -> io::Result<()> {
     );
 
     let pool = Pool::builder()
-        .max_size(16)
+        .max_size(5)
         .build(db_conn_manager)
         .expect("Unable to build connection pool");
 
@@ -40,12 +50,22 @@ fn main() -> io::Result<()> {
     let port = env::var("PORT").expect("PORT variable must be set");
     let ip_addr = host.to_owned() + ":" + &port;
 
+    let api_key: model::APIKey =
+        env::var("TMDB_API_KEY").expect("TMDB_API_KEY variable must be set");
+
+
     info!("Starting Actix-Web server");
 
     HttpServer::new(move || {
+        let templates: Tera = compile_templates!("templates/**/*");
         App::new()
+            .data(templates)
+            .data(Client::new())
             .data(pool.clone())
-            .service(web::resource("/").to(|| "Hello World"))
+            .data(api_key.clone())
+            .wrap(middleware::Logger::default())
+            .service(web::resource("/").to_async(handler::fetch_movies_now_playing))
+            .service(fs::Files::new("/static", "static/"))
     })
     .bind(&ip_addr)?
     .run()
