@@ -7,6 +7,9 @@ use std::io;
 use actix_web::{web, App, HttpServer};
 use r2d2::Pool;
 use r2d2_mongodb::{ConnectionOptions, MongodbConnectionManager};
+mod handler;
+mod model;
+
 
 fn main() -> io::Result<()> {
     env::set_var("RUST_LOG", "movieapp=debug,actix_web=debug");
