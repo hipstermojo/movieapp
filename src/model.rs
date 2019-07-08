@@ -10,6 +10,10 @@ pub type APIKey = String;
 pub type MongoPool = Pool<MongodbConnectionManager>;
 type MongoPooledConnection = PooledConnection<MongodbConnectionManager>;
 
+fn get_db_conn(pool: &MongoPool) -> Result<MongoPooledConnection, &'static str> {
+    pool.get().map_err(|_| "Can't get database connection")
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct APIMovieData {
     pub backdrop_path: String,
@@ -25,6 +29,13 @@ pub struct APIMovieData {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct APIResponse {
     pub results: Vec<APIMovieData>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct NewUserForm {
+    pub name: String,
+    pub email: String,
+    pub password: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -44,15 +55,4 @@ impl User {
             None,
         )
     }
-}
-
-fn get_db_conn(pool: &MongoPool) -> Result<MongoPooledConnection, &'static str> {
-    pool.get().map_err(|_| "Can't get database connection")
-}
-
-#[derive(Debug, Deserialize)]
-pub struct NewUserForm {
-    pub name: String,
-    pub email: String,
-    pub password: String,
 }
