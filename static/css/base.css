@@ -24,7 +24,13 @@ nav>ul {
     justify-content: space-between;
 }
 
-.login {
+
+nav a {
+    text-decoration: none;
+    color: white;
+}
+
+nav .login {
     color: teal;
     background-color: white;
     padding: 5px 10px;

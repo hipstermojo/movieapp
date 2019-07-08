@@ -1,0 +1,40 @@
+{% extends "base.tera" %}
+{% block styles %}
+    {{super()}}
+    <link rel="stylesheet" href="/static/css/login.css">
+{% endblock %}
+{% block nav %}
+<nav>
+    <ul>
+        <li><a href="/">Movieapp</a></li>
+    </ul>
+</nav>
+{% endblock %}
+{% block main %}
+    <form method="POST" action="/signup">
+        <div>
+            <label for="name">
+            Name
+            </label>
+            <input name="name" type="text" placeholder="Your username" required>
+        </div>
+        <div>
+            <label for="email">
+            Email Address
+            </label>
+            <input name="email" type="email" placeholder="Your email" required>
+        </div>
+        <div>
+            <label for="password">
+            Password
+            </label>
+            <input name="password" type="password" placeholder="Password" required>
+        </div>
+        <div>
+            <input value="Sign Up" type="submit">
+        </div>
+        <div>
+            <p>Already a member? <a href="/login">Log in</a></p>
+        </div>
+    </form>
+{% endblock %}

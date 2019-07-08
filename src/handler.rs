@@ -1,4 +1,4 @@
-use actix_web::{client::Client, error, web, Error, HttpResponse};
+use actix_web::{client::Client, error, http, web, Error, HttpResponse};
 use futures::Future;
 use tera::{Context, Tera};
 
@@ -31,6 +31,34 @@ pub fn fetch_movies_now_playing(
                     .map_err(|e| error::ErrorInternalServerError(e.description().to_owned()))?;
                 Ok(HttpResponse::Ok().body(rendered_body))
             }
+            Err(e) => Err(e),
+        })
+}
+
+pub fn login_view(tmpl: web::Data<Tera>) -> Result<HttpResponse, Error> {
+    let rendered_body = tmpl
+        .render("login.tera", &Context::new())
+        .map_err(|e| error::ErrorInternalServerError(e.description().to_owned()))?;
+    Ok(HttpResponse::Ok().body(rendered_body))
+}
+
+pub fn signup_view(tmpl: web::Data<Tera>) -> Result<HttpResponse, Error> {
+    let rendered_body = tmpl
+        .render("signup.tera", &Context::new())
+        .map_err(|e| error::ErrorInternalServerError(e.description().to_owned()))?;
+    Ok(HttpResponse::Ok().body(rendered_body))
+}
+
+pub fn new_user_view(
+    pool: web::Data<model::MongoPool>,
+    new_user_form: web::Form<model::NewUserForm>,
+) -> impl Future<Item = HttpResponse, Error = Error> {
+    web::block(move || model::User::create(new_user_form.into_inner(), &pool))
+        .from_err()
+        .then(move |res| match res {
+            Ok(_) => Ok(HttpResponse::Found()
+                .header(http::header::LOCATION, "/")
+                .finish()),
             Err(e) => Err(e),
         })
 }
