@@ -15,4 +15,13 @@
         </div>
     </div>
 </div>
+<p>Now Playing in theatres</p>
+<div class="now-playing">
+    {% for result in results %}
+        <div>
+            <img src="https://image.tmdb.org/t/p/w500{{result.poster_path}}" alt="{{results[0].title}} poster image">
+            <p>{{result.title}}</p>
+        </div>
+    {% endfor %}
+</div>
 {% endblock %}

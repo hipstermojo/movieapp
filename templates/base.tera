@@ -16,6 +16,7 @@
         <nav>
             <ul>
                 <li>Movieapp</li>
+                <li><a href="/login" class="login">Login</a></li>
             </ul>
         </nav>
     {% endblock %}

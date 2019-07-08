@@ -1,6 +1,6 @@
 use actix_web::{client::Client, error, web, Error, HttpResponse};
 use futures::Future;
-use tera::Tera;
+use tera::{Context, Tera};
 
 use crate::model;
 
@@ -24,8 +24,10 @@ pub fn fetch_movies_now_playing(
         })
         .then(move |body| match body {
             Ok(body) => {
+                let mut ctxt = Context::new();
+                ctxt.insert("results", &body.results);
                 let rendered_body = tmpl
-                    .render("index.tera", &body)
+                    .render("index.tera", &ctxt)
                     .map_err(|e| error::ErrorInternalServerError(e.description().to_owned()))?;
                 Ok(HttpResponse::Ok().body(rendered_body))
             }
