@@ -14,18 +14,7 @@ nav {
     height: 60px;
 }
 
-nav>ul {
-    display: flex;
-    list-style: none;
-    margin: 0%;
-    padding: 20px;
-    height: inherit;
-    width: 100%;
-    justify-content: space-between;
-}
-
-
-nav a {
+nav>a {
     text-decoration: none;
     color: white;
 }

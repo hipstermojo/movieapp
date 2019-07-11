@@ -41,6 +41,14 @@
     font-weight: bold;
 }
 
+.now-playing-title {
+    width: 100%;
+    font-size: 18px;
+    padding: 10px 0px;
+    font-weight: bold;
+    margin: 0%;
+}
+
 .now-playing {
     display: flex;
     flex-direction: row;
@@ -49,8 +57,27 @@
     width: 100%;
 }
 
+
+.now-playing::-webkit-scrollbar {
+    width: 10px;
+}
+
+.now-playing::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+/* Handle on hover */
+.now-playing::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
 .now-playing>div {
     margin-right: 10px;
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: content-box;
 }
 
 .now-playing>div:first-child {
@@ -59,6 +86,14 @@
 
 .now-playing>div:last-child {
     margin-right: 0px;
+}
+
+.now-playing>div>p {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 16px;
+    height: 32px;
+    padding: 0px 5px;
 }
 
 .now-playing img {
