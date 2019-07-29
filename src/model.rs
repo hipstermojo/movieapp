@@ -14,15 +14,17 @@ fn get_db_conn(pool: &MongoPool) -> Result<MongoPooledConnection, &'static str> 
     pool.get().map_err(|_| "Can't get database connection")
 }
 
+pub type ImagePath = Option<String>;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct APIMovieData {
-    pub backdrop_path: String,
+    pub backdrop_path: ImagePath,
     pub genre_ids: Vec<u32>,
     pub id: u32,
     pub original_language: String,
     pub title: String,
     pub overview: String,
-    pub poster_path: String,
+    pub poster_path: ImagePath,
     pub release_date: String,
 }
 
