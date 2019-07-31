@@ -4,25 +4,23 @@
     <link rel="stylesheet" href="/static/css/login.css">
 {% endblock %}
 {% block nav %}
-<nav>
-    <ul>
-        <li><a href="/">Movieapp</a></li>
-    </ul>
+<nav class="bg-dark">
+    <a href="/">Movieapp</a>
 </nav>
 {% endblock %}
 {% block main %}
     <form method="POST" action="/login">
         <div>
-            <label for="name">
-            Name
+            <label for="email">
+            Email
             </label>
-            <input name="name" type="text" placeholder="Your username" required>
+            <input name="email" type="email" placeholder="Email address" required>
         </div>
         <div>
             <label for="password">
             Password
             </label>
-            <input name="password" type="password" placeholder="Password" required>
+            <input name="password" type="password" autocomplete="current-password" placeholder="Password" required>
         </div>
         <div>
             <input value="Log In" type="submit">

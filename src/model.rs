@@ -1,6 +1,8 @@
+use bson;
 use mongodb::coll::results::InsertOneResult;
 use mongodb::db::{Database, ThreadedDatabase};
 use mongodb::oid::ObjectId;
+use mongodb::DecoderError;
 use r2d2::{Pool, PooledConnection};
 use r2d2_mongodb::MongodbConnectionManager;
 
@@ -42,7 +44,13 @@ pub struct NewUserForm {
     pub password: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, Clone)]
+pub struct LoginForm {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     pub _id: ObjectId,
     pub name: String,
@@ -72,14 +80,34 @@ impl User {
                                 doc! {"name":new_user.name,"email":new_user.email,"password":encrypted_password},
                                 None,
                             ).map_err(|e| HandlerErrors::DatabaseError(e));
-                        },
-                        Err(_) => return Err(HandlerErrors::HashingError)
+                        }
+                        Err(_) => return Err(HandlerErrors::HashingError),
                     }
                 }
             },
             Err(e) => {
                 return Err(HandlerErrors::DatabaseError(e));
             }
+        };
+    }
+
+    pub fn find_by_email(login_form: LoginForm, pool: &MongoPool) -> Result<User, HandlerErrors> {
+        let db_conn: &Database = &get_db_conn(pool).unwrap();
+        let users_coll = db_conn.collection("users");
+        let search_result = users_coll.find_one(Some(doc! {"email":login_form.email}), None);
+        match search_result {
+            Ok(result) => match result {
+                Some(user_doc) => {
+                    let decoded_user: Result<User, DecoderError> =
+                        bson::from_bson(bson::Bson::Document(user_doc));
+                    match decoded_user {
+                        Ok(user) => return Ok(user),
+                        Err(e) => return Err(HandlerErrors::DecoderError(e)),
+                    };
+                }
+                None => return Err(HandlerErrors::UserNotExistError),
+            },
+            Err(e) => return Err(HandlerErrors::DatabaseError(e)),
         };
     }
 }

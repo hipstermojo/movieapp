@@ -73,8 +73,16 @@ fn main() -> io::Result<()> {
             ))
             .wrap(middleware::Logger::default())
             .service(web::resource("/").to_async(handler::fetch_movies_now_playing))
-            .service(web::resource("/login").route(web::get().to(handler::login_view)))
-            .service(web::resource("/signup").route(web::get().to(handler::signup_view)))
+            .service(
+                web::resource("/login")
+                    .route(web::get().to(handler::login_view))
+                    .route(web::post().to_async(handler::login_handler)),
+            )
+            .service(
+                web::resource("/signup")
+                    .route(web::get().to(handler::signup_view))
+                    .route(web::post().to_async(handler::new_user_handler)),
+            )
             .service(fs::Files::new("/static", "static/"))
     })
     .bind(&ip_addr)?

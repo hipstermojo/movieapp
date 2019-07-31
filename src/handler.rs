@@ -4,6 +4,7 @@ use futures::Future;
 use tera::{Context, Tera};
 
 use crate::model;
+use crate::utils;
 use crate::utils::HandlerErrors;
 
 pub fn fetch_movies_now_playing(
@@ -44,6 +45,41 @@ pub fn login_view(tmpl: web::Data<Tera>) -> Result<HttpResponse, Error> {
     Ok(HttpResponse::Ok().body(rendered_body))
 }
 
+pub fn login_handler(
+    tmpl: web::Data<Tera>,
+    pool: web::Data<model::MongoPool>,
+    login_form: web::Form<model::LoginForm>,
+    id: Identity,
+) -> impl Future<Item = HttpResponse, Error = Error> {
+    let login_info = login_form.clone();
+    web::block(move || model::User::find_by_email(login_form.into_inner(), &pool)).then(
+        move |res| {
+            match res {
+                Ok(user) => match utils::verify_password(&user.password, &login_info.password) {
+                    Ok(is_verified) => {
+                        if is_verified {
+                            id.remember(user._id.to_string());
+                            let mut ctxt = Context::new();
+                            ctxt.insert("user", &user);
+                            let rendered_body =
+                                tmpl.render("profile.tera", &ctxt).map_err(|e| {
+                                    error::ErrorInternalServerError(e.description().to_owned())
+                                })?;
+                            return Ok(HttpResponse::Ok().body(rendered_body));
+                        } else {
+                            return Ok(
+                                HttpResponse::BadRequest().body("Incorrect email or password")
+                            );
+                        }
+                    }
+                    Err(e) => return Err(error::ErrorInternalServerError(e)),
+                },
+                Err(e) => return Err(error::ErrorBadRequest(e)),
+            };
+        },
+    )
+}
+
 pub fn signup_view(tmpl: web::Data<Tera>) -> Result<HttpResponse, Error> {
     let rendered_body = tmpl
         .render("signup.tera", &Context::new())
@@ -73,7 +109,7 @@ pub fn new_user_handler(
             let user_id = user.inserted_id.map(|x| x.to_string()).unwrap();
             id.remember(user_id);
             Ok(HttpResponse::Found()
-                .header(http::header::LOCATION, "/")
+                .header(http::header::LOCATION, "/login")
                 .finish())
         }
         Err(e) => Err(e),

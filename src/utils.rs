@@ -1,4 +1,4 @@
-use argonautica::{Error, Hasher};
+use argonautica::{Error, Hasher,Verifier};
 use std::error;
 use std::fmt;
 
@@ -23,9 +23,11 @@ impl error::Error for ExistingUserError {
 
 #[derive(Debug)]
 pub enum HandlerErrors {
+    UserNotExistError,
     HashingError,
     ValidationError(ExistingUserError),
     DatabaseError(mongodb::Error),
+    DecoderError(mongodb::DecoderError)
 }
 
 pub fn encrypt_password(password: &str) -> Result<String, Error> {
@@ -34,4 +36,9 @@ pub fn encrypt_password(password: &str) -> Result<String, Error> {
         .with_password(password)
         .with_secret_key("Super secret")
         .hash()
+}
+
+pub fn verify_password(hash: &str,password: &str) -> Result<bool,Error> {
+    let mut verifier = Verifier::default();
+    verifier.with_hash(hash).with_password(password).with_secret_key("Super secret").verify()
 }
