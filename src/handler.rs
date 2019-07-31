@@ -57,6 +57,8 @@ pub fn new_user_view(
     web::block(move || {
         model::User::create(new_user_form.into_inner(), &pool).map_err(|e| {
             match e {
+                // TO DO
+                HandlerErrors::HashingError => "Error while hashing".to_owned(),
                 HandlerErrors::ValidationError(_) => "User email is already taken".to_owned(),
                 HandlerErrors::DatabaseError(err) => err.to_string(),
             }

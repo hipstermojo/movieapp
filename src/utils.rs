@@ -1,12 +1,13 @@
-use std::fmt;
+use argonautica::{Error, Hasher};
 use std::error;
+use std::fmt;
 
 #[derive(Debug, Clone)]
 pub struct ExistingUserError;
 
 impl fmt::Display for ExistingUserError {
-    fn fmt(&self,f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f,"User already exists")
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "User already exists")
     }
 }
 
@@ -22,6 +23,15 @@ impl error::Error for ExistingUserError {
 
 #[derive(Debug)]
 pub enum HandlerErrors {
+    HashingError,
     ValidationError(ExistingUserError),
     DatabaseError(mongodb::Error),
+}
+
+pub fn encrypt_password(password: &str) -> Result<String, Error> {
+    let mut hasher = Hasher::default();
+    hasher
+        .with_password(password)
+        .with_secret_key("Super secret")
+        .hash()
 }

@@ -65,10 +65,16 @@ impl User {
                     return Err(HandlerErrors::ValidationError(utils::ExistingUserError));
                 }
                 None => {
-                    return users_coll.insert_one(
-                        doc! {"name":new_user.name,"email":new_user.email,"password":new_user.password},
-                        None,
-                    ).map_err(|e| HandlerErrors::DatabaseError(e));
+                    let hashed_password = utils::encrypt_password(&new_user.password);
+                    match hashed_password {
+                        Ok(encrypted_password) => {
+                            return users_coll.insert_one(
+                                doc! {"name":new_user.name,"email":new_user.email,"password":encrypted_password},
+                                None,
+                            ).map_err(|e| HandlerErrors::DatabaseError(e));
+                        },
+                        Err(_) => return Err(HandlerErrors::HashingError)
+                    }
                 }
             },
             Err(e) => {
