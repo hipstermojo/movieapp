@@ -51,9 +51,10 @@ pub fn signup_view(tmpl: web::Data<Tera>) -> Result<HttpResponse, Error> {
     Ok(HttpResponse::Ok().body(rendered_body))
 }
 
-pub fn new_user_view(
+pub fn new_user_handler(
     pool: web::Data<model::MongoPool>,
     new_user_form: web::Form<model::NewUserForm>,
+    id: Identity,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
     web::block(move || {
         model::User::create(new_user_form.into_inner(), &pool).map_err(|e| {
@@ -62,6 +63,7 @@ pub fn new_user_view(
                 HandlerErrors::HashingError => "Error while hashing".to_owned(),
                 HandlerErrors::ValidationError(_) => "User email is already taken".to_owned(),
                 HandlerErrors::DatabaseError(err) => err.to_string(),
+                _ => "Unexpected error occurred".to_owned(),
             }
         })
     })
