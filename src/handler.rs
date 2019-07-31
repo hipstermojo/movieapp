@@ -3,6 +3,7 @@ use futures::Future;
 use tera::{Context, Tera};
 
 use crate::model;
+use crate::utils::HandlerErrors;
 
 pub fn fetch_movies_now_playing(
     client: web::Data<Client>,
@@ -53,12 +54,19 @@ pub fn new_user_view(
     pool: web::Data<model::MongoPool>,
     new_user_form: web::Form<model::NewUserForm>,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
-    web::block(move || model::User::create(new_user_form.into_inner(), &pool))
-        .from_err()
-        .then(move |res| match res {
-            Ok(_) => Ok(HttpResponse::Found()
-                .header(http::header::LOCATION, "/")
-                .finish()),
-            Err(e) => Err(e),
+    web::block(move || {
+        model::User::create(new_user_form.into_inner(), &pool).map_err(|e| {
+            match e {
+                HandlerErrors::ValidationError(_) => "User email is already taken".to_owned(),
+                HandlerErrors::DatabaseError(err) => err.to_string(),
+            }
         })
+    })
+    .from_err()
+    .then(move |res| match res {
+        Ok(_) => Ok(HttpResponse::Found()
+            .header(http::header::LOCATION, "/")
+            .finish()),
+        Err(e) => Err(e),
+    })
 }

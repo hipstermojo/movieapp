@@ -22,6 +22,7 @@ use tera::Tera;
 
 mod handler;
 mod model;
+mod utils;
 
 fn main() -> io::Result<()> {
     env::set_var("RUST_LOG", "movieapp=debug,actix_web=debug");
