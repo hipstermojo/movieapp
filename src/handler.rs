@@ -1,3 +1,4 @@
+use actix_identity::Identity;
 use actix_web::{client::Client, error, http, web, Error, HttpResponse};
 use futures::Future;
 use tera::{Context, Tera};
@@ -66,9 +67,13 @@ pub fn new_user_view(
     })
     .from_err()
     .then(move |res| match res {
-        Ok(_) => Ok(HttpResponse::Found()
-            .header(http::header::LOCATION, "/")
-            .finish()),
+        Ok(user) => {
+            let user_id = user.inserted_id.map(|x| x.to_string()).unwrap();
+            id.remember(user_id);
+            Ok(HttpResponse::Found()
+                .header(http::header::LOCATION, "/")
+                .finish())
+        }
         Err(e) => Err(e),
     })
 }

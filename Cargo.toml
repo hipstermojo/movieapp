@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 actix-files="0.1.4"
+actix-identity="0.1.0"
 actix-web={version = "1.0.5", features = ["ssl"]}
 argonautica="0.2.0"
 bson="0.13.0"
