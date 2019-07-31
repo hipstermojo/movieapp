@@ -14,6 +14,7 @@ use std::env;
 use std::io;
 
 use actix_files as fs;
+use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::client::Client;
 use actix_web::{middleware, web, App, HttpServer};
 use r2d2::Pool;
@@ -65,14 +66,15 @@ fn main() -> io::Result<()> {
             .data(Client::new())
             .data(pool.clone())
             .data(api_key.clone())
+            .wrap(IdentityService::new(
+                CookieIdentityPolicy::new(&[0; 32])
+                    .name("actix-auth")
+                    .secure(false),
+            ))
             .wrap(middleware::Logger::default())
             .service(web::resource("/").to_async(handler::fetch_movies_now_playing))
             .service(web::resource("/login").route(web::get().to(handler::login_view)))
-            .service(
-                web::resource("/signup")
-                    .route(web::get().to(handler::signup_view))
-                    .route(web::post().to_async(handler::new_user_view)),
-            )
+            .service(web::resource("/signup").route(web::get().to(handler::signup_view)))
             .service(fs::Files::new("/static", "static/"))
     })
     .bind(&ip_addr)?

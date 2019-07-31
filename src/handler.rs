@@ -1,3 +1,4 @@
+use actix_identity::Identity;
 use actix_web::{client::Client, error, http, web, Error, HttpResponse};
 use futures::Future;
 use tera::{Context, Tera};
@@ -50,23 +51,31 @@ pub fn signup_view(tmpl: web::Data<Tera>) -> Result<HttpResponse, Error> {
     Ok(HttpResponse::Ok().body(rendered_body))
 }
 
-pub fn new_user_view(
+pub fn new_user_handler(
     pool: web::Data<model::MongoPool>,
     new_user_form: web::Form<model::NewUserForm>,
+    id: Identity,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
     web::block(move || {
         model::User::create(new_user_form.into_inner(), &pool).map_err(|e| {
             match e {
+                // TO DO
+                HandlerErrors::HashingError => "Error while hashing".to_owned(),
                 HandlerErrors::ValidationError(_) => "User email is already taken".to_owned(),
                 HandlerErrors::DatabaseError(err) => err.to_string(),
+                _ => "Unexpected error occurred".to_owned(),
             }
         })
     })
     .from_err()
     .then(move |res| match res {
-        Ok(_) => Ok(HttpResponse::Found()
-            .header(http::header::LOCATION, "/")
-            .finish()),
+        Ok(user) => {
+            let user_id = user.inserted_id.map(|x| x.to_string()).unwrap();
+            id.remember(user_id);
+            Ok(HttpResponse::Found()
+                .header(http::header::LOCATION, "/")
+                .finish())
+        }
         Err(e) => Err(e),
     })
 }
