@@ -72,7 +72,7 @@ fn main() -> io::Result<()> {
                     .secure(false),
             ))
             .wrap(middleware::Logger::default())
-            .service(web::resource("/").to_async(handler::fetch_movies_now_playing))
+            .service(web::resource("/").to_async(handler::index_view))
             .service(
                 web::resource("/login")
                     .route(web::get().to(handler::login_view))
