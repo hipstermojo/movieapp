@@ -83,6 +83,7 @@ fn main() -> io::Result<()> {
                     .route(web::get().to(handler::signup_view))
                     .route(web::post().to_async(handler::new_user_handler)),
             )
+            .service(web::resource("/logout").route(web::get().to(handler::logout_handler)))
             .service(fs::Files::new("/static", "static/"))
     })
     .bind(&ip_addr)?

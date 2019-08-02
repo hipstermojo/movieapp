@@ -41,11 +41,11 @@ pub fn index_view(
             web::block(move || {
                 if let Some(id) = user_id {
                     match model::User::find_by_id(&id, &pool) {
-                        Ok(user) => return Ok(user),
+                        Ok(user) => return Ok(Some(user)),
                         Err(e) => return Err(e),
                     };
                 } else {
-                    return Err(utils::HandlerErrors::UserNotExistError);
+                    return Ok(None);
                 }
             })
             .map_err(Error::from)
@@ -133,4 +133,13 @@ pub fn new_user_handler(
             .finish()),
         Err(e) => Err(e),
     })
+}
+
+pub fn logout_handler(id: Identity) -> HttpResponse {
+    if let Some(_) = id.identity() {
+        id.forget();
+    }
+    HttpResponse::Found()
+        .header(http::header::LOCATION, "/")
+        .finish()
 }
