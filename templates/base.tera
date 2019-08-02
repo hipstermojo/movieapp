@@ -21,7 +21,11 @@
                     <input type="text" class="form-control" placeholder="Search for movies">
                 </div>
             </form>
-            <a href="/login" class="button login">Login</a>  
+            {% if is_auth %}
+                <p>Hello {{user.name}}</p>
+            {% else %}
+                <a href="/login" class="login">Login</a>
+            {% endif %}
         </nav>
     {% endblock %}
     {% block main %}

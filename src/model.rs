@@ -110,4 +110,26 @@ impl User {
             Err(e) => return Err(HandlerErrors::DatabaseError(e)),
         };
     }
+
+    pub fn find_by_id(id: &str, pool: &MongoPool) -> Result<User, HandlerErrors> {
+        let db_conn: &Database = &get_db_conn(pool).unwrap();
+        let users_coll = db_conn.collection("users");
+        let obj_id = ObjectId::with_string(id).unwrap();
+        match users_coll.find_one(Some(doc! {"_id":obj_id}), None) {
+            Ok(search_result) => match search_result {
+                Some(user_doc) => {
+                    let decoded_user: Result<User, DecoderError> =
+                        bson::from_bson(bson::Bson::Document(user_doc));
+                    match decoded_user {
+                        Ok(user) => return Ok(user),
+                        Err(e) => return Err(HandlerErrors::DecoderError(e)),
+                    };
+                }
+                None => return Err(HandlerErrors::UserNotExistError),
+            },
+            Err(e) => {
+                return Err(HandlerErrors::DatabaseError(e));
+            }
+        }
+    }
 }

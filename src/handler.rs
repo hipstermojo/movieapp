@@ -7,16 +7,19 @@ use crate::model;
 use crate::utils;
 use crate::utils::HandlerErrors;
 
-pub fn fetch_movies_now_playing(
+pub fn index_view(
     client: web::Data<Client>,
     api_key: web::Data<model::APIKey>,
+    pool: web::Data<model::MongoPool>,
     tmpl: web::Data<Tera>,
-) -> impl Future<Item = HttpResponse, Error = impl Into<Error>> {
+    id: Identity,
+) -> impl Future<Item = HttpResponse, Error = Error> {
     let tmdb_url = format!(
         "https://api.themoviedb.org/3/movie/now_playing?api_key={}&language=en-US&page=1",
         api_key.get_ref()
     );
     info!("Fetching now playing movies from TMDB API");
+    let user_id = id.identity();
     client
         .get(tmdb_url)
         .send()
@@ -29,12 +32,33 @@ pub fn fetch_movies_now_playing(
             Ok(body) => {
                 let mut ctxt = Context::new();
                 ctxt.insert("results", &body.results);
-                let rendered_body = tmpl
-                    .render("index.tera", &ctxt)
-                    .map_err(|e| error::ErrorInternalServerError(e.description().to_owned()))?;
-                Ok(HttpResponse::Ok().body(rendered_body))
+                ctxt.insert("is_auth", &id.identity());
+                return Ok(ctxt);
             }
-            Err(e) => Err(e),
+            Err(e) => return Err(e),
+        })
+        .and_then(move |mut ctxt| {
+            web::block(move || {
+                if let Some(id) = user_id {
+                    match model::User::find_by_id(&id, &pool) {
+                        Ok(user) => return Ok(Some(user)),
+                        Err(e) => return Err(e),
+                    };
+                } else {
+                    return Ok(None);
+                }
+            })
+            .map_err(Error::from)
+            .then(move |res| match res {
+                Ok(user) => {
+                    ctxt.insert("user", &user);
+                    let rendered_body = tmpl
+                        .render("index.tera", &ctxt)
+                        .map_err(|e| error::ErrorInternalServerError(e.description().to_owned()))?;
+                    return Ok(HttpResponse::Ok().body(rendered_body));
+                }
+                Err(e) => return Err(e),
+            })
         })
 }
 
@@ -90,7 +114,6 @@ pub fn signup_view(tmpl: web::Data<Tera>) -> Result<HttpResponse, Error> {
 pub fn new_user_handler(
     pool: web::Data<model::MongoPool>,
     new_user_form: web::Form<model::NewUserForm>,
-    id: Identity,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
     web::block(move || {
         model::User::create(new_user_form.into_inner(), &pool).map_err(|e| {
@@ -104,14 +127,10 @@ pub fn new_user_handler(
         })
     })
     .from_err()
-    .then(move |res| match res {
-        Ok(user) => {
-            let user_id = user.inserted_id.map(|x| x.to_string()).unwrap();
-            id.remember(user_id);
-            Ok(HttpResponse::Found()
-                .header(http::header::LOCATION, "/login")
-                .finish())
-        }
+    .then(|res| match res {
+        Ok(_) => Ok(HttpResponse::Found()
+            .header(http::header::LOCATION, "/login")
+            .finish()),
         Err(e) => Err(e),
     })
 }
