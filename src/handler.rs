@@ -134,3 +134,12 @@ pub fn new_user_handler(
         Err(e) => Err(e),
     })
 }
+
+pub fn logout_handler(id: Identity) -> HttpResponse {
+    if let Some(_) = id.identity() {
+        id.forget();
+    }
+    HttpResponse::Found()
+        .header(http::header::LOCATION, "/")
+        .finish()
+}
